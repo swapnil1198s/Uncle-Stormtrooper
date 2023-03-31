@@ -35,6 +35,7 @@ class Player(pygame.sprite.Sprite):
         self.speed = 5 #horizontal speed
         self.gravity = 1
         self.doublejump = True 
+        self.facing_left = False
     
     def move(self, x, y):
         self.rect.move_ip([x,y])
@@ -46,8 +47,10 @@ class Player(pygame.sprite.Sprite):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]:
             x_movement = -self.speed
+            self.facing_left = True
         elif keys[pygame.K_RIGHT]:
             x_movement = self.speed
+            self.facing_left = False
 
         if keys[pygame.K_UP] and onground:
             self.v_speed = -self.vert
@@ -66,7 +69,11 @@ class Player(pygame.sprite.Sprite):
         self.move(x_movement,self.v_speed)
 
     def draw(self,surface):
-        surface.blit(self.image, self.rect)
+        if self.facing_left:
+            temp_image = pygame.transform.flip(self.image, True, False)
+            surface.blit(temp_image, self.rect)
+        else:
+            surface.blit(self.image, self.rect)
 
 class Box(pygame.sprite.Sprite):
     def __init__(self, x, y):
