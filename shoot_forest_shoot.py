@@ -1,8 +1,8 @@
 # Author: Swapnil Srivastava
 # Game controls:
-#   Use mouse to aim and shoot by clicking.
+#   Use mouse to  shoot by clicking.
 #   Arrows to move.
-#   Spacebar to jump.
+#   Spacebar to double jump when in the air.
 
 import pygame
 from pygame.locals import *
@@ -39,7 +39,8 @@ class Player(pygame.sprite.Sprite):
     
     def move(self, x, y):
         self.rect.move_ip([x,y])
-
+    def get_pos(self):
+        return self.rect.center
     def update(self, boxes):
         x_movement = 0
         onground = pygame.sprite.spritecollideany(self,boxes)
@@ -87,17 +88,32 @@ class Box(pygame.sprite.Sprite):
 
 #Our bullet object created upon mouse click 
 class Bullet(pygame.sprite.Sprite):
-    def __init__(self, start_pos, direction):
+    def __init__(self, start_pos, aim):
         super().__init__()
         self.color = BLACK
         #self.position = pos
-        self.velocity = 5
-        self.size = 5,5
-        self.rect = pygame.Rect(start_pos,self.size)
+        self.velocity = 18
+        self.size = 7,5
+        self.rect = pygame.Rect([start_pos[0]+10,start_pos[1] -40],self.size)
+        self.x = start_pos[0]+10
+        # self.slope = (aim[1] - start_pos[1]) / (aim[0] - start_pos[0])
+        # self.y_intercept = start_pos[1]
     
     def update(self):
-        self.rect.move_ip(10,0)
-    
+        # Work on the below code to implement shooting in any direction
+        # y_temp = self.y #old y value
+        # self.x += self.velocity #update current x 
+        # self.y = (self.slope * self.x) + self.y_intercept #update current y
+        
+        # y = self.y -y_temp  #y offset
+        self.x += self.velocity
+        self.rect.move_ip(self.velocity, 1)
+    def check_collision_box(self, boxes):
+        return pygame.sprite.spritecollideany(self,boxes)
+    def out_of_screen(self):
+        if(self.x>1900): # out of screen
+            return True
+        return False
     def draw(self,surface):
         pygame.draw.rect(surface, BLACK, self.rect)
 
@@ -123,20 +139,24 @@ def main():
                 sys.exit()
             if event.type == MOUSEBUTTONDOWN:
                 # if(len(bullets)<10):
-                    bullets.append(Bullet(pygame.mouse.get_pos()))
+                    bullets.append(Bullet(player.get_pos(), pygame.mouse.get_pos()))
                 # else:
                 #     pygame.event.post(pygame.event.Event(GAMEOVER))
-        
+       
+        scene.fill(SKY_BLUE)
         player.update(floor_boxes)
+        player.draw(scene)
+        floor_boxes.draw(scene)
+        
+
         for bullet in bullets:
             bullet.draw(scene)
             bullet.update()
-        scene.fill(SKY_BLUE)
-
-        player.draw(scene)
-        floor_boxes.draw(scene)
+            
+            if(bullet.check_collision_box(floor_boxes) or bullet.out_of_screen()): #remove bullet from this array when it collides with the floor of is out of the screen.
+                bullets.remove(bullet)
+        
         pygame.display.update()
-
         Clock.tick(FPS)
 
 main()
