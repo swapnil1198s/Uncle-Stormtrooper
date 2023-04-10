@@ -11,7 +11,7 @@ import sys
 import time
 
 pygame.init()
-FPS = 60
+FPS = 120
 Clock = pygame.time.Clock()
 
 #Colors
@@ -39,8 +39,12 @@ class Player(pygame.sprite.Sprite):
     
     def move(self, x, y):
         self.rect.move_ip([x,y])
+
     def get_pos(self):
         return self.rect.center
+    
+    def set_pos(self, x, y):
+        self.rect.center = x, y
     def update(self, boxes):
         x_movement = 0
         onground = pygame.sprite.spritecollideany(self,boxes)
@@ -81,12 +85,13 @@ class Box(pygame.sprite.Sprite):
         super().__init__()
         self.image = pygame.image.load("box_image_collection/box_1.png")
         self.rect = self.image.get_rect()
-        self.rect.center = (x,y) #if the buc is 50 X 50 then the intersection of feet of player and top of the box should happen at y = 700 + 62.5 + 25
+        self.rect.center = (x,y) #if the box is 50 X 50 then the intersection of feet of player and top of the box should happen at y = 700 + 62.5 + 25
 
     def draw(self, surface):
         surface.blit(self.image, self.rect)
 
 #Our bullet object created upon mouse click 
+# Note to self: Look at how the player move function was implemented. This can be helpful in getting the intended bullet functionality.
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, start_pos, aim):
         super().__init__()
@@ -121,15 +126,21 @@ def main():
     print("This is a shooting game, so beware! Many monsters lurk in the shadows...")
 
     #Set up the scene
-    scene = pygame.display.set_mode((1900, 1280))
+    X = 1900
+    Y = 1280
+    scene = pygame.display.set_mode((X, Y))
     scene.fill(SKY_BLUE)
     pygame.display.set_caption("Survive forest, survive!")
 
     #Initialize player
     player = Player()
     floor_boxes = pygame.sprite.Group()
-    for box in range(48, 1900, 96):
-        floor_boxes.add(Box(box,800))
+    step = 96
+    for box in range(48, X, step):
+        if(box>950):
+            floor_boxes.add(Box(box+(step*2), 700)) #All these boxes are at y = 700, but the player has to jump the gap of width = step*2
+        else:
+            floor_boxes.add(Box(box,800)) #All these boxes are at y = 800
     alive = True
     bullets = []
     while alive:
@@ -147,7 +158,6 @@ def main():
         player.update(floor_boxes)
         player.draw(scene)
         floor_boxes.draw(scene)
-        
 
         for bullet in bullets:
             bullet.draw(scene)
@@ -156,6 +166,11 @@ def main():
             if(bullet.check_collision_box(floor_boxes) or bullet.out_of_screen()): #remove bullet from this array when it collides with the floor of is out of the screen.
                 bullets.remove(bullet)
         
+        if(player.get_pos()[1]>Y):
+            alive = False
+
+        if(player.get_pos()[0]>1280):
+            player.set_pos(50,650)
         pygame.display.update()
         Clock.tick(FPS)
 
