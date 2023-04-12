@@ -61,7 +61,7 @@ class Player(pygame.sprite.Sprite):
             self.v_speed = -self.vert
         elif keys[pygame.K_SPACE] and  (not onground) and self.doublejump:
             self.doublejump = False  
-            self.v_speed -= self.vert 
+            self.v_speed -= (self.vert -5)
 
         #gravity
         if self.v_speed < 10 and not onground:
@@ -134,15 +134,40 @@ def main():
 
     #Initialize player
     player = Player()
-    floor_boxes = pygame.sprite.Group()
-    step = 96
-    for box in range(48, X, step):
+
+    #Groups of boxes that make up the floor. Each group represents the floor layout as the player progresses through the game.
+    #TODO: Generate the groups using a loop.
+    floor_boxes_1 = pygame.sprite.Group()
+    floor_boxes_2 = pygame.sprite.Group()
+    floor_boxes_3 = pygame.sprite.Group()
+    floor_boxes_4 = pygame.sprite.Group()
+    floor_boxes_5 = pygame.sprite.Group()
+
+    step = 96 #TODO clean this up.
+    for box in range(48, X, step): #TODO clean this up
         if(box>950):
-            floor_boxes.add(Box(box+(step*2), 700)) #All these boxes are at y = 700, but the player has to jump the gap of width = step*2
+            floor_boxes_1.add(Box(box+(step*2), 700)) #First section of the map
+            #floor_boxes_2.add(Box(box+(step*2), 800))
+            #floor_boxes_3.add()
+            #floor_boxes_4.add()
+            #floor_boxes_5.add()
+        elif(box<=950):
+            floor_boxes_1.add(Box(box,800)) #First section of the map
+            if(box<600):
+                floor_boxes_2.add(Box(box,700)) #Second section of the map
+            else:
+                floor_boxes_2.add(Box(box+(step*2), 500))
+                floor_boxes_2.add(Box(box+(step), 900))
+            #floor_boxes_2.add(Box(box,700))
         else:
-            floor_boxes.add(Box(box,800)) #All these boxes are at y = 800
+            break
+    
+    floor = []
+    floor.append(floor_boxes_1)
+    floor.append(floor_boxes_2)
     alive = True
     bullets = []
+    map_section = 0; # Used to update map based on player position. Starts with the first floor boxes group
     while alive:
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -155,22 +180,33 @@ def main():
                 #     pygame.event.post(pygame.event.Event(GAMEOVER))
        
         scene.fill(SKY_BLUE)
-        player.update(floor_boxes)
-        player.draw(scene)
-        floor_boxes.draw(scene)
 
-        for bullet in bullets:
+        player.update(floor[map_section])
+        player.draw(scene)
+
+        #Dray appropriate map based on player location
+        if(map_section == 0):
+            floor_boxes_1.draw(scene)
+        elif(map_section == 1):
+            floor_boxes_2.draw(scene)
+
+        for bullet in bullets: #TODO: House all of the bullets in a group.
             bullet.draw(scene)
             bullet.update()
             
-            if(bullet.check_collision_box(floor_boxes) or bullet.out_of_screen()): #remove bullet from this array when it collides with the floor of is out of the screen.
+            if(bullet.check_collision_box(floor[map_section]) or bullet.out_of_screen()): #remove bullet from this array when it collides with the floor of is out of the screen.
                 bullets.remove(bullet)
         
         if(player.get_pos()[1]>Y):
             alive = False
 
-        if(player.get_pos()[0]>1280):
-            player.set_pos(50,650)
+        if(player.get_pos()[0]>X):
+            player.set_pos(50,600)
+            map_section+=1
+        elif(player.get_pos()[0]<0):
+            player.set_pos(X-20, 600)
+            map_section -= 1
+        
         pygame.display.update()
         Clock.tick(FPS)
 
