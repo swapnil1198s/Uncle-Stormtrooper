@@ -122,6 +122,43 @@ class Bullet(pygame.sprite.Sprite):
     def draw(self,surface):
         pygame.draw.rect(surface, BLACK, self.rect)
 
+class Monster(pygame.sprite.Sprite):
+    def __init__(self, pos, lvl):
+        super().__init__()
+        if(lvl ==1):
+            self.image = pygame.image.load("monster_images/lvl_1.png")    
+            self.image = pygame.transform.scale(self.image, (100,100))
+            self.health = 200
+            self.velocity = 9
+        self.rect = self.image.get_rect()
+        self.rect.center = pos
+        self.lvl = lvl
+        
+        self.left_facing = True
+
+    def turn(self):
+        self.left_facing = not(self.left_facing)
+
+    def update(self):
+        if(self.lvl == 1):
+            if(self.left_facing):
+                #self.rect.center =  (self.rect.center[0]-self.velocity,self.rect.center[1])
+                self.rect.move_ip(-self.velocity, 0)
+            else:
+                #self.rect.center =  (self.rect.center[0]+self.velocity,self.rect.center[1])
+                self.rect.move_ip(self.velocity, 0)
+    
+    def get_pos(self):
+        return self.rect.center
+    
+    def draw(self,surface):
+        if(self.left_facing):
+            surface.blit(self.image, self.rect)
+        else:
+            temp_image = pygame.transform.flip(self.image, True, False)
+            surface.blit(temp_image, self.rect)
+        
+
 def main():
     print("This is a shooting game, so beware! Many monsters lurk in the shadows...")
 
@@ -147,7 +184,8 @@ def main():
     for box in range(48, X, step): #TODO clean this up
         if(box>950):
             floor_boxes_1.add(Box(box+(step*2), 700)) #First section of the map
-            #floor_boxes_2.add(Box(box+(step*2), 800))
+            floor_boxes_2.add(Box(box+(step), 900))
+            
             #floor_boxes_3.add()
             #floor_boxes_4.add()
             #floor_boxes_5.add()
@@ -155,6 +193,7 @@ def main():
             floor_boxes_1.add(Box(box,800)) #First section of the map
             if(box<600):
                 floor_boxes_2.add(Box(box,700)) #Second section of the map
+                floor_boxes_3.add(Box(box, 900))
             else:
                 floor_boxes_2.add(Box(box+(step*2), 500))
                 floor_boxes_2.add(Box(box+(step), 900))
@@ -165,9 +204,13 @@ def main():
     floor = []
     floor.append(floor_boxes_1)
     floor.append(floor_boxes_2)
+    floor.append(floor_boxes_3)
     alive = True
     bullets = []
     map_section = 0; # Used to update map based on player position. Starts with the first floor boxes group
+
+    monsters = []
+    monsters.append(Monster([1300,605], 1))
     while alive:
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -189,6 +232,18 @@ def main():
             floor_boxes_1.draw(scene)
         elif(map_section == 1):
             floor_boxes_2.draw(scene)
+        elif(map_section == 2):
+            floor_boxes_3.draw(scene)
+
+        #Monsters view
+        if(monsters[0].get_pos()[0]<=1180 or monsters[0].get_pos()[0]>(X-50)):
+            monsters[0].turn()  #Set the path for the first monster
+        for i in range(len(monsters)):
+            if(map_section==0 and i==0):
+                monsters[i].update()
+                if(pygame.sprite.spritecollideany(player, monsters)):
+                    alive = False
+                monsters[i].draw(scene)
 
         for bullet in bullets: #TODO: House all of the bullets in a group.
             bullet.draw(scene)
@@ -201,10 +256,10 @@ def main():
             alive = False
 
         if(player.get_pos()[0]>X):
-            player.set_pos(50,600)
+            player.set_pos(50,player.get_pos()[1])
             map_section+=1
         elif(player.get_pos()[0]<0):
-            player.set_pos(X-20, 600)
+            player.set_pos(X-20, player.get_pos()[1])
             map_section -= 1
         
         pygame.display.update()
