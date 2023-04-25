@@ -219,6 +219,8 @@ def generate_floor():
     floor.append(floor_boxes_3)
     return floor      
 
+
+#This function handles the start menu view
 def start_menu(scene):
     scene.fill(GREY)
     # defining a font 
