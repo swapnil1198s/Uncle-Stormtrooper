@@ -2,7 +2,7 @@
 # Game controls:
 #   Use mouse to  shoot by clicking.
 #   Arrows to move.
-#   Spacebar to double jump when in the air.
+#   Tap the up arrow to double jump when in the air.
 
 import pygame
 from pygame.locals import *
@@ -20,8 +20,8 @@ LRED   = (255, 204, 203)
 GREEN = (0, 255, 0) 
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
-SKY_BLUE = (135,206,235)
-
+SKY_BLUE = (135,206,235)      
+        
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
@@ -38,7 +38,6 @@ class Player(pygame.sprite.Sprite):
         self.can_jump = True 
         self.doublejump = False 
         self.facing_left = False
-
     
     def move(self, x, y):
         self.rect.move_ip([x,y])
@@ -50,10 +49,6 @@ class Player(pygame.sprite.Sprite):
         self.rect.center = x, y
     
     def jump(self):
-        
-        # if(self.onground):
-        #     self.can_jump = True
-        
         if  self.doublejump:
             self.doublejump = False  #Does not allow the player to double jump more than once
             self.v_speed -= 20
@@ -63,9 +58,6 @@ class Player(pygame.sprite.Sprite):
             self.doublejump = True  #Allows the player to double jump
             print(self.doublejump)
             self.v_speed = -self.vert #Apply force upwards
-        
-        
-        
 
     def update(self, boxes):
         x_movement = 0
@@ -96,6 +88,7 @@ class Player(pygame.sprite.Sprite):
             surface.blit(temp_image, self.rect)
         else:
             surface.blit(self.image, self.rect)
+
 
 class Box(pygame.sprite.Sprite):
     def __init__(self, x, y):
