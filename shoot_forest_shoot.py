@@ -10,18 +10,32 @@ from pygame.locals import *
 import sys
 import time
 
+#Initialize the constructor
 pygame.init()
-FPS = 120
-Clock = pygame.time.Clock()
+
+#Window dimensions
+X = 1900
+Y = 1280
 
 #Colors
 BLUE  = (0, 0, 255)
 LRED   = (255, 204, 203)
 GREEN = (0, 255, 0) 
 BLACK = (0, 0, 0)
+GREY = (36, 36, 36)
 WHITE = (255, 255, 255)
-SKY_BLUE = (135,206,235)      
-        
+SKY_BLUE = (135,206,235)   
+
+FPS = 120
+Clock = pygame.time.Clock()
+
+scene = pygame.display.set_mode((X, Y))
+pygame.display.set_caption("Survive forest, survive!")
+
+
+print("This is a shooting game, so beware! Many monsters lurk in the shadows...")
+
+
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
@@ -137,9 +151,9 @@ class Monster(pygame.sprite.Sprite):
         super().__init__()
         if(lvl ==1):
             self.image = pygame.image.load("monster_images/lvl_1.png")    
-            self.image = pygame.transform.scale(self.image, (100,100))
+            self.image = pygame.transform.scale(self.image, (80,80))
             self.health = 200
-            self.velocity = 9
+            self.velocity = 5
         self.rect = self.image.get_rect()
         self.rect.center = pos
         self.lvl = lvl
@@ -167,21 +181,9 @@ class Monster(pygame.sprite.Sprite):
         else:
             temp_image = pygame.transform.flip(self.image, True, False)
             surface.blit(temp_image, self.rect)
-        
 
-def main():
-    print("This is a shooting game, so beware! Many monsters lurk in the shadows...")
-
-    #Set up the scene
-    X = 1900
-    Y = 1280
-    scene = pygame.display.set_mode((X, Y))
-    scene.fill(SKY_BLUE)
-    pygame.display.set_caption("Survive forest, survive!")
-
-    #Initialize player
-    player = Player()
-
+#This method sets up the Box sprites that make up our floor for different sections of the map
+def generate_floor():
     #Groups of boxes that make up the floor. Each group represents the floor layout as the player progresses through the game.
     #TODO: Generate the groups using a loop.
     floor_boxes_1 = pygame.sprite.Group()
@@ -215,71 +217,103 @@ def main():
     floor.append(floor_boxes_1)
     floor.append(floor_boxes_2)
     floor.append(floor_boxes_3)
+    return floor      
+
+def start_menu(scene):
+    scene.fill(GREY)
+    # defining a font 
+    font = pygame.font.SysFont('Corbel',50)
+    title_font = pygame.font.SysFont('Arial', 100)
+    sub_title_font = pygame.font.SysFont('Arial', 70)
+    title = title_font.render('Shoot! Forest, Shoot!!' , True , WHITE)
+    sub_title1 = sub_title_font.render('This is a shooting game, so beware! ' , True , GREEN)
+    sub_title2 = sub_title_font.render('Many monsters lurk in the shadows...' , True , GREEN)
+    start_button = font.render("Press the Spacebar to Start Your Adventure" , True, WHITE)
+    scene.blit(title, (X/2 - title.get_width()/2, 150))
+    scene.blit(sub_title1, (X/2-sub_title1.get_width()/2, 300))
+    scene.blit(sub_title2, (X/2-sub_title2.get_width()/2, 370))
+    scene.blit(start_button, (X/2 - start_button.get_width()/2, Y/2 + start_button.get_height()))
+    pygame.display.update()
+
+
+def main():
+    #Set the game state to the start menu
+    game_state =  "start_menu"
+    scene.fill(SKY_BLUE)
+    #Initialize player
+    player = Player()
+    floor = generate_floor()
     alive = True
     bullets = []
     map_section = 0; # Used to update map based on player position. Starts with the first floor boxes group
 
     monsters = []
-    monsters.append(Monster([1300,605], 1))
+    monsters.append(Monster([1300,613], 1))
 
     
     print(pygame.key.get_repeat())
     while alive:
+        
         #Handle events
         for event in pygame.event.get():
             if event.type == QUIT:
                 pygame.quit()
-                sys.exit()                                    
+                sys.exit()
             if event.type == MOUSEBUTTONDOWN:
                 # if(len(bullets)<10):
                     bullets.append(Bullet(player.get_pos(), pygame.mouse.get_pos()))
                 # else:
                 #     pygame.event.post(pygame.event.Event(GAMEOVER))
             if event.type == KEYDOWN:
+                if game_state == "start_menu" and event.key==K_SPACE:
+                    game_state = "game"
                 if(event.key==K_UP):
                     player.jump()
-       
-        scene.fill(SKY_BLUE)
+        if game_state == "start_menu":
+            #Display start menu 
+            start_menu(scene)
+        if game_state == "game":
+            scene.fill(SKY_BLUE) #Background color
 
-        player.update(floor[map_section])
-        player.draw(scene)
+            player.update(floor[map_section])
+            player.draw(scene)
 
-        #Dray appropriate map based on player location
-        if(map_section == 0):
-            floor_boxes_1.draw(scene)
-        elif(map_section == 1):
-            floor_boxes_2.draw(scene)
-        elif(map_section == 2):
-            floor_boxes_3.draw(scene)
+            #Dray appropriate map based on player location
+            if(map_section == 0):
+                floor[0].draw(scene)
+            elif(map_section == 1):
+                floor[1].draw(scene)
+            elif(map_section == 2):
+                floor[2].draw(scene)
 
-        #Monsters view
-        if(monsters[0].get_pos()[0]<=1180 or monsters[0].get_pos()[0]>(X-50)):
-            monsters[0].turn()  #Set the path for the first monster
-        for i in range(len(monsters)):
-            if(map_section==0 and i==0):
-                monsters[i].update()
-                if(pygame.sprite.spritecollideany(player, monsters)):
-                    alive = False
-                monsters[i].draw(scene)
+            #Monsters view
+            if(monsters[0].get_pos()[0]<=1180 or monsters[0].get_pos()[0]>(X-50)):
+                monsters[0].turn()  #Set the path for the first monster
+            for i in range(len(monsters)):
+                if(map_section==0 and i==0):
+                    monsters[i].update()
+                    if(pygame.sprite.spritecollideany(player, monsters)):
+                        alive = False
+                    monsters[i].draw(scene)
 
-        for bullet in bullets: #TODO: House all of the bullets in a group.
-            bullet.draw(scene)
-            bullet.update()
+            for bullet in bullets: #TODO: House all of the bullets in a group.
+                bullet.draw(scene)
+                bullet.update()
+                
+                if(bullet.check_collision_box(floor[map_section]) or bullet.out_of_screen()): #remove bullet from this array when it collides with the floor of is out of the screen.
+                    bullets.remove(bullet)
             
-            if(bullet.check_collision_box(floor[map_section]) or bullet.out_of_screen()): #remove bullet from this array when it collides with the floor of is out of the screen.
-                bullets.remove(bullet)
-        
-        if(player.get_pos()[1]>Y):
-            alive = False
+            if(player.get_pos()[1]>Y):
+                alive = False
 
-        if(player.get_pos()[0]>X):
-            player.set_pos(50,player.get_pos()[1])
-            map_section+=1
-        elif(player.get_pos()[0]<0):
-            player.set_pos(X-20, player.get_pos()[1])
-            map_section -= 1
-        
-        pygame.display.update()
-        Clock.tick(FPS)
+            if(player.get_pos()[0]>X):
+                player.set_pos(50,player.get_pos()[1])
+                map_section+=1
+            elif(player.get_pos()[0]<0):
+                player.set_pos(X-20, player.get_pos()[1])
+                map_section -= 1
+            
+            pygame.display.update()
+            Clock.tick(FPS)
 
 main()
