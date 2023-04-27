@@ -19,6 +19,7 @@ Y = 1280
 
 #Colors
 BLUE  = (0, 0, 255)
+RED = (255, 100, 100)
 LRED   = (255, 204, 203)
 GREEN = (0, 255, 0) 
 BLACK = (0, 0, 0)
@@ -237,6 +238,24 @@ def start_menu(scene):
     scene.blit(start_button, (X/2 - start_button.get_width()/2, Y/2 + start_button.get_height()))
     pygame.display.update()
 
+#This is shown to the player once the game is over
+def game_over(scene):
+    scene.fill(SKY_BLUE)
+    # defining a font 
+    font = pygame.font.SysFont('Corbel',70)
+    title_font = pygame.font.SysFont('Arial', 150)
+    sub_title_font = pygame.font.SysFont('Arial', 70)
+    title = title_font.render('GAME OVER!' , True , RED)
+    # sub_title1 = sub_title_font.render('This is a shooting game, so beware! ' , True , GREEN)
+    # sub_title2 = sub_title_font.render('Many monsters lurk in the shadows...' , True , GREEN)
+    start_button = font.render("Press the Spacebar to Retry or the Esc key to exit" , True, BLACK)
+    scene.blit(title, (X/2 - title.get_width()/2, 150))
+    # scene.blit(sub_title1, (X/2-sub_title1.get_width()/2, 300))
+    # scene.blit(sub_title2, (X/2-sub_title2.get_width()/2, 370))
+    scene.blit(start_button, (X/2 - start_button.get_width()/2, Y/2 + start_button.get_height()))
+    pygame.display.update()
+
+
 
 def main():
     #Set the game state to the start menu
@@ -269,11 +288,20 @@ def main():
             if event.type == KEYDOWN:
                 if game_state == "start_menu" and event.key==K_SPACE:
                     game_state = "game"
+                if game_state == "game_over" and event.key==K_SPACE:
+                    main()
+                if game_state == "game_over" and event.key==K.ESCAPE:
+                    pygame.quit()
+                    sys.exit()
                 if(event.key==K_UP):
                     player.jump()
+
         if game_state == "start_menu":
             #Display start menu 
             start_menu(scene)
+        if game_state == "game_over":
+            #Display start menu 
+            game_over(scene)
         if game_state == "game":
             scene.fill(SKY_BLUE) #Background color
 
@@ -295,7 +323,7 @@ def main():
                 if(map_section==0 and i==0):
                     monsters[i].update()
                     if(pygame.sprite.spritecollideany(player, monsters)):
-                        alive = False
+                        game_state = "game_over"
                     monsters[i].draw(scene)
 
             for bullet in bullets: #TODO: House all of the bullets in a group.
@@ -306,7 +334,7 @@ def main():
                     bullets.remove(bullet)
             
             if(player.get_pos()[1]>Y):
-                alive = False
+                game_state = "game_over"
 
             if(player.get_pos()[0]>X):
                 player.set_pos(50,player.get_pos()[1])
