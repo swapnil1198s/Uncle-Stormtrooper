@@ -67,11 +67,9 @@ class Player(pygame.sprite.Sprite):
         if  self.doublejump:
             self.doublejump = False  #Does not allow the player to double jump more than once
             self.v_speed -= 20
-            print(self.doublejump)
         if self.can_jump:
             self.can_jump = False
             self.doublejump = True  #Allows the player to double jump
-            print(self.doublejump)
             self.v_speed = -self.vert #Apply force upwards
 
     def update(self, boxes):
@@ -255,7 +253,10 @@ def game_over(scene):
     scene.blit(start_button, (X/2 - start_button.get_width()/2, Y/2 + start_button.get_height()))
     pygame.display.update()
 
-
+def score_board(scene, score):
+    font = pygame.font.SysFont('Corbel', 50)
+    score_font = font.render("Score: " + str(score) , True , BLACK )
+    scene.blit(score_font, ((X/2)- score_font.get_width()/2, 60))
 
 def main():
     #Set the game state to the start menu
@@ -271,8 +272,8 @@ def main():
     monsters = []
     monsters.append(Monster([1300,613], 1))
 
-    
-    print(pygame.key.get_repeat())
+    score = 0
+
     while alive:
         
         #Handle events
@@ -304,7 +305,7 @@ def main():
             game_over(scene)
         if game_state == "game":
             scene.fill(SKY_BLUE) #Background color
-
+            score_board(scene, score)
             player.update(floor[map_section])
             player.draw(scene)
 
@@ -316,15 +317,7 @@ def main():
             elif(map_section == 2):
                 floor[2].draw(scene)
 
-            #Monsters view
-            if(monsters[0].get_pos()[0]<=1180 or monsters[0].get_pos()[0]>(X-50)):
-                monsters[0].turn()  #Set the path for the first monster
-            for i in range(len(monsters)):
-                if(map_section==0 and i==0):
-                    monsters[i].update()
-                    if(pygame.sprite.spritecollideany(player, monsters)):
-                        game_state = "game_over"
-                    monsters[i].draw(scene)
+            
 
             for bullet in bullets: #TODO: House all of the bullets in a group.
                 bullet.draw(scene)
@@ -332,7 +325,24 @@ def main():
                 
                 if(bullet.check_collision_box(floor[map_section]) or bullet.out_of_screen()): #remove bullet from this array when it collides with the floor of is out of the screen.
                     bullets.remove(bullet)
-            
+                for monster in monsters:
+                    if bullet.rect.colliderect(monster.rect):
+                        # remove the bullet and the enemy sprites from their respective lists
+                        bullets.remove(bullet)
+                        monsters.remove(monster)
+                        # increment the score by 10
+                        score += 10
+            #Monsters view
+            if(len(monsters)>0):
+                if(monsters[0].get_pos()[0]<=1180 or monsters[0].get_pos()[0]>(X-50)):
+                    monsters[0].turn()  #Set the path for the first monster
+                for i in range(len(monsters)):
+                    if(map_section==0 and i==0):
+                        monsters[i].update()
+                        if(pygame.sprite.spritecollideany(player, monsters)):
+                            game_state = "game_over"
+                        monsters[i].draw(scene)    
+
             if(player.get_pos()[1]>Y):
                 game_state = "game_over"
 
