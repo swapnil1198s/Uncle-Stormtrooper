@@ -12,15 +12,15 @@ After downloading the files and required software, run the uncle_stormtrooper.py
 Avoid touching monsters and getting hit by them 
 Use the teleportation grenade to teleport at the destination where the grenade lands.
 
+ <img width="1440" alt="game_snap" src="https://user-images.githubusercontent.com/46658528/236312069-722c9b66-efd4-403b-be0f-7b467b6bc5ae.png">
+ 
 Controls:
 
 Up arrow key to Jump(tap when in air to double jump)
 Left Arrow key to Move character to the left
 Right Arrow Key to Move character to the right
 Tab to Throw teleportation grenade (If thrown, teleport to location of grenade)
-Mouseclick to <img width="1440" alt="game_snap" src="https://user-images.githubusercontent.com/46658528/236312069-722c9b66-efd4-403b-be0f-7b467b6bc5ae.png">
-<img width="1440" alt="game_snap" src="https://user-images.githubusercontent.com/46658528/236312116-d634ff75-2185-4126-9f7d-0e6c1b9ec97f.png">
-Shoot
+Mouseclick to Shoot
 
 Game Design
 Mechanics/Technology
