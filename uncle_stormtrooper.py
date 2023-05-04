@@ -152,8 +152,20 @@ class Box(pygame.sprite.Sprite):
         self.image = pygame.image.load("box_image_collection/box_1.png")
         self.image = pygame.transform.scale(self.image, (self.side, self.side))
         self.rect = self.image.get_rect()
-        self.rect.center = (x,y) #if the box is 50 X 50 then the intersection of feet of player and top of the box should happen at y = 700 + 62.5 + 25
+        self.rect.center = (x,y) 
 
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
+
+#Puppy object representing cute Coco needing rescue.
+class Puppy(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.image = pygame.image.load("coco_smiling.png")
+        self.image = pygame.transform.scale(self.image, (100, 169))
+        self.rect = self.image.get_rect()
+        self.rect.center = (x, y)
+    
     def draw(self, surface):
         surface.blit(self.image, self.rect)
 
@@ -185,8 +197,14 @@ def generate_floor(lvl):
                 floor_boxes.add(Box((box), round(screen_Y*0.3)))
             elif(box> screen_X/3 and box<screen_X/2):
                 floor_boxes.add(Box((box+step*4), round(screen_Y*0.5)))
+            elif(box> screen_X/2):
+                floor_boxes.add(Box((box+step*4), round(screen_Y*0.5)))
         elif(lvl==5):
-            print("")
+            if(box<screen_X/3):
+                floor_boxes.add(Box((box), round(screen_Y*0.5)))
+            else:
+                floor_boxes.add(Box((box+step*4), round(screen_Y*0.7)))
+            
     return floor_boxes
 
 #Method to display current score
@@ -230,6 +248,27 @@ def game_over(scene, score):
     scene.blit(actions, (screen_X//2 - actions.get_width()/2, screen_Y//2 + actions.get_height()))
     pygame.display.update()
 
+#This controls the view for the game won screen
+def game_won(scene, score):
+    scene.fill(SKY_BLUE)
+    # defining a font 
+    font = pygame.font.SysFont('Corbel',screen_Y//17)
+    title_font = pygame.font.SysFont('Arial', screen_Y//10)
+    title = title_font.render('GAME WON!' , True , GREEN)
+    # sub_title1 = sub_title_font.render('This is a shooting game, so beware! ' , True , GREEN)
+    # sub_title2 = sub_title_font.render('Many monsters lurk in the shadows...' , True , GREEN)
+    actions = font.render("Press the Spacebar to Retry or the Esc key to exit" , True, BLACK)
+    final_score = font.render("Your score: " + str(score), True, BLACK)
+    scene.blit(title, (screen_X//2 - title.get_width()/2, screen_Y//10))
+    # scene.blit(sub_title1, (X/2-sub_title1.get_width()/2, 300))
+    # scene.blit(sub_title2, (X/2-sub_title2.get_width()/2, 370))
+    scene.blit(final_score, (screen_X//2 - final_score.get_width()/2, screen_Y//2 + final_score.get_height() - 100))
+    scene.blit(actions, (screen_X//2 - actions.get_width()/2, screen_Y//2 + actions.get_height()))
+    puppy = Puppy(screen_X//15, round(screen_Y*0.45))
+    puppy2 = Puppy(screen_X - (screen_X//15), round(screen_Y*0.45))
+    puppy.draw(scene)
+    puppy2.draw(scene)
+    pygame.display.update()
 #Controller
 def main():
     #Set the game state to the start menu
@@ -241,7 +280,7 @@ def main():
     floor = generate_floor(floor_level) #Generate the floor for the current level
     alive = True
     bullets = []
-    
+    puppy = Puppy(screen_X - (screen_X//4), round(screen_Y*0.6))
     # monsters = []
     # monsters.append(Monster([1300,613], 1))
 
@@ -262,9 +301,9 @@ def main():
             if event.type == KEYDOWN:
                 if game_state == "start_menu" and event.key==K_SPACE:
                     game_state = "game"
-                if game_state == "game_over" and event.key==K_SPACE:
+                if (game_state == "game_over" or game_state=="won") and event.key==K_SPACE:
                     main()
-                if game_state == "game_over" and event.key==K.ESCAPE:
+                if  (game_state == "game_over" or game_state=="won") and event.key==K.ESCAPE:
                     pygame.quit()
                     sys.exit()
                 if(event.key==K_UP):
@@ -273,10 +312,10 @@ def main():
         if game_state == "start_menu":
             #Display start menu 
             start_menu(scene)
-        if game_state == "game_over":
+        elif game_state == "game_over":
             #Display game over screen 
             game_over(scene, score)
-        if game_state == "game":
+        elif game_state == "game":
             scene.fill(SKY_BLUE) #Background color
             score_board(scene, score)
             player.update(floor)
@@ -321,7 +360,16 @@ def main():
                 floor_level -= 1
                 floor = generate_floor(floor_level) #Generate the floor for the current level
             
-            pygame.display.update()
-            Clock.tick(FPS)
-
+            #Win condition
+            if(floor_level==5):
+                
+                puppy.draw(scene)
+                if(pygame.sprite.collide_rect(player,puppy)):
+                    game_state = "won"
+            
+        elif game_state == "won":
+            #Display game won screen
+            game_won(scene, score)
+        pygame.display.update()
+        Clock.tick(FPS)
 main()
