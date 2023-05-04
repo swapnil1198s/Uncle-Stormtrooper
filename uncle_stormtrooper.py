@@ -70,14 +70,29 @@ class TeleportationBomb(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = pos[0]
         self.rect.y = pos[1]
-        # self.speed_x = screen_X//15
-        # self.speed_y = screen_Y//
+        self.speed_x = speed_x
+        self.speed_y = speed_y
+        self.gravity = 1
 
-    def update(self):
+    def update(self, boxes):
+        onground = pygame.sprite.spritecollideany(self,boxes)
+        
         # Update the projectile's position based on its speed
         self.rect.x += self.speed_x
         self.rect.y += self.speed_y
-        # Check for collisions and handle them
+        #gravity
+        if self.speed_y<10 and not onground:
+            self.speed_y += self.gravity
+
+        if self.speed_y >0 and onground:
+            self.speed_x = 0
+            self.speed_y = 0
+            self.rect.y -= 50
+    def get_pos(self):
+        return (self.rect.x, self.rect.y)
+    
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -95,6 +110,10 @@ class Player(pygame.sprite.Sprite):
         self.can_jump = True 
         self.doublejump = False 
         self.facing_left = False
+        self.can_teleport = False
+        self.teleportation_initiated = False
+        self.grenade = TeleportationBomb(self.rect.center, 10, 10)
+
     
     def move(self, x, y):
         self.rect.move_ip([x,y])
@@ -137,7 +156,21 @@ class Player(pygame.sprite.Sprite):
         
         self.move(x_movement,self.v_speed)
 
-    def draw(self,surface):
+    def teleport(self):
+        if(self.can_teleport):
+            self.rect.center = self.grenade.get_pos()
+            self.can_teleport = False
+        else:
+            if(self.facing_left):
+                self.grenade = TeleportationBomb(self.get_pos(), -10, -30)
+            else:
+                self.grenade = TeleportationBomb(self.get_pos(), 10, -30)
+            self.can_teleport = True
+
+    def draw(self,surface, floor):
+        if(self.can_teleport):
+            self.grenade.update(floor)
+            self.grenade.draw(scene)
         if self.facing_left:
             temp_image = pygame.transform.flip(self.image, True, False)
             surface.blit(temp_image, self.rect)
@@ -169,10 +202,64 @@ class Puppy(pygame.sprite.Sprite):
     def draw(self, surface):
         surface.blit(self.image, self.rect)
 
+class Monster(pygame.sprite.Sprite):
+    def __init__(self, pos, lvl):
+        super().__init__()
+        self.image = pygame.image.load("monster_images/lvl_1.png")    
+        self.image = pygame.transform.scale(self.image, (80,80))
+        self.health = 200
+        self.velocity = 5
+        self.rect = self.image.get_rect()
+        self.rect.center = pos
+        self.lvl = lvl
+        
+        self.left_facing = True
+
+    def turn(self):
+        self.left_facing = not(self.left_facing)
+
+    def update(self):
+        if(self.lvl == 1):
+            if(self.left_facing and self.rect.center[0]>screen_X//1.7):
+                #self.rect.center =  (self.rect.center[0]-self.velocity,self.rect.center[1])
+                self.rect.move_ip(-self.velocity, 0)
+            elif((not self.left_facing) and self.rect.center[0]<screen_X):
+                self.rect.move_ip(self.velocity, 0)
+            else:
+                self.turn()
+        if(self.lvl == 2):
+            if(self.left_facing and self.rect.center[0]>screen_X//1.7):
+                #self.rect.center =  (self.rect.center[0]-self.velocity,self.rect.center[1])
+                self.rect.move_ip(-self.velocity, 0)
+            elif((not self.left_facing) and self.rect.center[0]<screen_X):
+                self.rect.move_ip(self.velocity, 0)
+            else:
+                self.turn()
+        if(self.lvl == 3):
+            if(self.left_facing and self.rect.center[0]>screen_X//2.7):
+                #self.rect.center =  (self.rect.center[0]-self.velocity,self.rect.center[1])
+                self.rect.move_ip(-self.velocity, 0)
+            elif((not self.left_facing) and self.rect.center[0]<screen_X):
+                self.rect.move_ip(self.velocity, 0)
+            else:
+                self.turn()
+        if(self.lvl == 4):
+            if(self.left_facing and self.rect.center[0]>screen_X//1.7):
+                #self.rect.center =  (self.rect.center[0]-self.velocity,self.rect.center[1])
+                self.rect.move_ip(-self.velocity, 0)
+            elif((not self.left_facing) and self.rect.center[0]<screen_X):
+                self.rect.move_ip(self.velocity, 0)
+            else:
+                self.turn()
+    def draw(self,surface):
+        if(self.left_facing):
+            surface.blit(self.image, self.rect)
+        else:
+            temp_image = pygame.transform.flip(self.image, True, False)
+            surface.blit(temp_image, self.rect)
 #This method creates the floor sprites based on the current level
 def generate_floor(lvl):
     floor_boxes = pygame.sprite.Group()
-
     step = screen_X//25 #based on the size of our box sprites
     for box in range(0, screen_X, step):
         if(lvl==1):
@@ -204,7 +291,7 @@ def generate_floor(lvl):
                 floor_boxes.add(Box((box), round(screen_Y*0.5)))
             else:
                 floor_boxes.add(Box((box+step*4), round(screen_Y*0.7)))
-            
+    
     return floor_boxes
 
 #Method to display current score
@@ -269,6 +356,26 @@ def game_won(scene, score):
     puppy.draw(scene)
     puppy2.draw(scene)
     pygame.display.update()
+
+def draw_monsters(scene, monsters):
+    #Monsters view
+    if(len(monsters)>0):
+        for i in range(len(monsters)):
+            monsters[i].update()
+            monsters[i].draw(scene) 
+
+def generate_monsters(floor_lvl):
+    monsters = []
+    if(floor_lvl==1):
+        monsters.append(Monster((screen_X//2, round(screen_Y*0.68)), floor_lvl))
+    elif(floor_lvl==2):
+        monsters.append(Monster((screen_X//2, round(screen_Y*0.43)), floor_lvl))
+    elif(floor_lvl==3):
+        monsters.append(Monster((screen_X//2, round(screen_Y*0.73)), floor_lvl))
+        monsters.append(Monster((screen_X//2, round(screen_Y*0.23)), floor_lvl))
+    elif(floor_lvl==4):
+        monsters.append(Monster((screen_X//2, round(screen_Y*0.43)), floor_lvl))
+    return monsters
 #Controller
 def main():
     #Set the game state to the start menu
@@ -277,11 +384,13 @@ def main():
     #Initialize player
     player = Player()
     floor_level = 1 #Player starts at level 1
+    monsters = []
     floor = generate_floor(floor_level) #Generate the floor for the current level
+    monsters = generate_monsters(floor_level)
     alive = True
     bullets = []
     puppy = Puppy(screen_X - (screen_X//4), round(screen_Y*0.6))
-    # monsters = []
+    
     # monsters.append(Monster([1300,613], 1))
 
     score = 0
@@ -293,11 +402,8 @@ def main():
             if event.type == QUIT:
                 pygame.quit()
                 sys.exit()
-            # if event.type == MOUSEBUTTONDOWN:
-            #     # if(len(bullets)<10):
-            #         bullets.append(Bullet(player.get_pos(), pygame.mouse.get_pos()))
-            #     # else:
-            #     #     pygame.event.post(pygame.event.Event(GAMEOVER))
+            if event.type == MOUSEBUTTONDOWN:
+                bullets.append(Bullet(player.get_pos(), pygame.mouse.get_pos()))
             if event.type == KEYDOWN:
                 if game_state == "start_menu" and event.key==K_SPACE:
                     game_state = "game"
@@ -308,6 +414,8 @@ def main():
                     sys.exit()
                 if(event.key==K_UP):
                     player.jump()
+                if(game_state == "game" and event.key==K_TAB):
+                    player.teleport()
 
         if game_state == "start_menu":
             #Display start menu 
@@ -319,24 +427,27 @@ def main():
             scene.fill(SKY_BLUE) #Background color
             score_board(scene, score)
             player.update(floor)
-            player.draw(scene)
-
+            player.draw(scene, floor)
+            draw_monsters(scene, monsters)
             #Dray appropriate map based on player location
             floor.draw(scene)
             
-            # for bullet in bullets: #TODO: House all of the bullets in a group.
-            #     bullet.draw(scene)
-            #     bullet.update()
+            for bullet in bullets: #TODO: House all of the bullets in a group.
+                bullet.draw(scene)
+                bullet.update()
                 
-            #     if(bullet.check_collision_box(floor[map_section]) or bullet.out_of_screen()): #remove bullet from this array when it collides with the floor of is out of the screen.
-            #         bullets.remove(bullet)
-            #     for monster in monsters:
-            #         if bullet.rect.colliderect(monster.rect):
-            #             # remove the bullet and the enemy sprites from their respective lists
-            #             bullets.remove(bullet)
-            #             monsters.remove(monster)
-            #             # increment the score by 10
-            #             score += 10
+                if(bullet.check_collision_box(floor) or bullet.out_of_screen()): #remove bullet from this array when it collides with the floor of is out of the screen.
+                    bullets.remove(bullet)
+                for monster in monsters:
+                    if bullet.rect.colliderect(monster.rect):
+                        # remove the bullet and the enemy sprites from their respective lists
+                        bullets.remove(bullet)
+                        monsters.remove(monster)
+                        # increment the score by 10
+                        score += 10
+            
+            if(pygame.sprite.spritecollideany(player, monsters)):
+                game_state = "game_over"
             #Monsters view
             # if(len(monsters)>0):
             #     if(monsters[0].get_pos()[0]<=1180 or monsters[0].get_pos()[0]>(X-50)):
@@ -354,10 +465,12 @@ def main():
             if(player.get_pos()[0]>screen_X):
                 player.set_pos(50,player.get_pos()[1])
                 floor_level += 1
+                monsters = generate_monsters(floor_level)
                 floor = generate_floor(floor_level) #Generate the floor for the current level
             elif(player.get_pos()[0]<0):
                 player.set_pos(screen_X-20, player.get_pos()[1])
                 floor_level -= 1
+                monsters = generate_monsters(floor_level)
                 floor = generate_floor(floor_level) #Generate the floor for the current level
             
             #Win condition
@@ -365,6 +478,7 @@ def main():
                 
                 puppy.draw(scene)
                 if(pygame.sprite.collide_rect(player,puppy)):
+                    score += 100
                     game_state = "won"
             
         elif game_state == "won":
