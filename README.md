@@ -1,7 +1,9 @@
 Uncle Stormtrooper
 ~By Swapnil Srivastava
+
 Introduction
-	Uncle Stormtrooper is a 2D platformer game centering around a stormtrooper in his mid-life crisis. We must help uncle stormtrooper navigate his way through a horde of monsters to reach his beloved dog. This game’s architecture and code were significantly changed in the last few days to make this game scalable. We hope to keep adding to the functionalities of this game to make it a complete 2d shooter platformer game.
+
+Uncle Stormtrooper is a 2D platformer game centering around a stormtrooper in his mid-life crisis. We must help uncle stormtrooper navigate his way through a horde of monsters to reach his beloved dog. This game’s architecture and code were significantly changed in the last few days to make this game scalable. We hope to keep adding to the functionalities of this game to make it a complete 2d shooter platformer game.
 
 The game can be found here: https://github.com/swapnil1198s/Uncle-Stormtrooper
 
