@@ -307,7 +307,7 @@ def start_menu(scene):
     font = pygame.font.SysFont('Corbel',screen_Y//20)
     title_font = pygame.font.SysFont('Arial', screen_Y//12)
     sub_title_font = pygame.font.SysFont('Arial', screen_Y//17)
-    title = title_font.render('Shoot! Forest, Shoot!!' , True , WHITE)
+    title = title_font.render('Uncle Stormtrooper!' , True , WHITE)
     sub_title1 = sub_title_font.render('This is a shooting game, so beware! ' , True , GREEN)
     sub_title2 = sub_title_font.render('Many monsters lurk in the shadows...' , True , GREEN)
     start_button = font.render("Press the Spacebar to Start Your Adventure" , True, WHITE)
