@@ -4,7 +4,7 @@ Uncle Stormtrooper<br />
 Introduction
 <br />
 
-Uncle Stormtrooper is a 2D platformer game centering around a stormtrooper in his mid-life crisis. We must help uncle stormtrooper navigate his way through a horde of monsters to reach his beloved dog. This game’s architecture and code were significantly changed in the last few days to make this game scalable. We hope to keep adding to the functionalities of this game to make it a complete 2d shooter platformer game.<br />
+Uncle Stormtrooper is a 2D platformer game centering around a stormtrooper in his mid-life crisis. We must help uncle stormtrooper navigate his way through a horde of monsters to reach his beloved dog.<br />
 
 The game can be found here: https://github.com/swapnil1198s/Uncle-Stormtrooper
 <br />
@@ -89,12 +89,6 @@ Task 4: Polish up jumping mechanics”<br />
 Jumps are no longer clunky.<br />
 Double jumps are adjusted to fit the game map more appropriately.<br />
 <br />
-Final Game Submission: April 26<br />
-Implemented different monster types<br />
-Implemented the teleportation grenade.<br />
-Implemented win condition.<br />
-Completed and polished game<br />
-Completed Game Document game<br />
 Demo Video<br />
 There is a video named gameplay.mov running through the game at: https://github.com/swapnil1198s/Uncle-Stormtrooper
 
